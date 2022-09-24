@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        {
+            "time": 10,
+            "recommendation": "("
+        },
+        {
+            "time": 11,
+            "recommendation": "("
+        },
+        {
+            "time": 12,
+            "recommendation": ")"
+        }
+    ]
+}
