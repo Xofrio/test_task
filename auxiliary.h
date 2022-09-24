@@ -12,9 +12,6 @@
 #define amount_input 	        4U
 #define order                   6U
 #define amount_seconds_sleep    1U
-#define amount_pipe_descriptors 2U
-#define pipe_descriptor_read    0U
-#define pipe_descriptor_write   1U
 #define size_file_name          32U
 #define format( T ) _Generic    \
 (                               \

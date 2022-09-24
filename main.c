@@ -1,10 +1,9 @@
 #include "process.h"
 #include "recommend.h"
 
-struct data_output output[amount_objects_maximum];
+struct data_output g_output[amount_objects_maximum];
 char g_file_input[size_file_name];
 char g_file_output[size_file_name];
-int g_pipe_descriptors[amount_pipe_descriptors];
 pthread_mutex_t g_mutex;
 pthread_cond_t g_condition;
 units g_time;
