@@ -1,8 +1,10 @@
 #ifndef AUXILIARY_H
 #define AUXILIARY_H
 
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -70,8 +72,9 @@ extern char g_file_input[size_file_name];
 extern char g_file_output[size_file_name];
 extern pthread_cond_t g_condition;
 extern pthread_mutex_t g_mutex;
+extern FILE * g_data_output;
 extern units g_time;
-extern size_t g_amount;
+extern size_t g_amount_objects;
 extern bool g_write_happened;
 
 #endif // AUXILIARY_H

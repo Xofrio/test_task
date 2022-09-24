@@ -1,5 +1,14 @@
 #include "recommend.h"
 
+void complete_json()
+{
+    g_data_output = fopen( g_file_output, "a+" );
+    fprintf( g_data_output, "\n\t]\n}\n" );
+    fclose( g_data_output );
+
+    exit( EXIT_SUCCESS );
+}
+
 void * recommend()
 {
     char const * recommendations[] =
@@ -8,10 +17,19 @@ void * recommend()
         "WARNING",
         "CRITICAL"
     };
+    size_t k = 0;
     size_t i;
     size_t j;
 
-    // open Json here first to place a scratch
+    struct sigaction signal_interceptor;
+    memset( &signal_interceptor, 0, sizeof( signal_interceptor ) );
+    signal_interceptor.sa_sigaction = complete_json;
+    sigaction( SIGINT, &signal_interceptor, NULL );
+
+    g_data_output = fopen( g_file_output, "w" );
+    fprintf( g_data_output, "{\n\t\"recommendations\": [\n" );
+    fclose( g_data_output );
+    
     for (;;)
     {
         for
@@ -20,26 +38,29 @@ void * recommend()
             !g_write_happened;
             pthread_cond_wait( &g_condition, &g_mutex )
         );
-
+        // TODO: Critical means we need to break from for, right?
         for
         (
             i = j = 0;
-            i < g_amount;
+            i < g_amount_objects;
             j = g_output[i].distance < critical_distance( g_output[i].distance )
             ? 2
             : (g_output[i].distance < warning_distance_1( g_output[i].distance )
             && g_output[i].approach_velocity > warning_velocity( g_output[i].approach_velocity )
             || g_output[i].distance < warning_distance_2( g_output[i].distance )
-            && g_output[i].approach_velocity < warning_velocity( g_output[i].approach_velocity )) && j < 2
+            && g_output[i].approach_velocity < warning_velocity( g_output[i].approach_velocity )) 
+            && j < 2
             ? 1
             : j,
             ++i
         );
 
-        // TODO: replace stdout with FILE handle (we need to g_output in json.)
-        fprintf( stdout, "TIME:\t\t" );
-        fprintf( stdout, format( g_time ), g_time );
-        fprintf( stdout, "\tRECOMMENDATION:\t%s\n", recommendations[j] );
+        g_data_output = fopen( g_file_output, "a+" );
+        k++ > 0 && fprintf ( g_data_output, ",\n" );
+        fprintf( g_data_output, "\t\t{\n\t\t\t\"time\": " );
+        fprintf( g_data_output, format( g_time ), g_time );
+        fprintf( g_data_output, ",\n\t\t\t\"recommendation\": \"%s\"\n\t\t}", recommendations[j] );
+        fclose( g_data_output );
 
         g_write_happened = false;
         pthread_mutex_unlock( &g_mutex );

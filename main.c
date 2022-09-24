@@ -6,13 +6,14 @@ char g_file_input[size_file_name];
 char g_file_output[size_file_name];
 pthread_mutex_t g_mutex;
 pthread_cond_t g_condition;
+FILE * g_data_output;
 units g_time;
-size_t g_amount;
+size_t g_amount_objects;
 bool g_write_happened;
 
 int main( int arguments_count, char * arguments[] )
 {
-	g_write_happened = g_amount = g_time = 0;
+	g_write_happened = g_amount_objects = g_time = 0;
 
 	memset( g_file_input, 0, sizeof( g_file_input ) );
 	memset( g_file_output, 0, sizeof( g_file_output ) );

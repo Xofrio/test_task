@@ -30,7 +30,7 @@ void get_data
 void * process()
 {
     struct data_input input[order][amount_objects_maximum + 1];
-    FILE * data;
+    FILE * data_input;
     size_t o = 0;
     size_t i;
     char has_other_objects;
@@ -39,23 +39,23 @@ void * process()
     {
         pthread_mutex_lock( &g_mutex );
 
-        g_amount = has_other_objects = 0;
+        g_amount_objects = has_other_objects = 0;
 
-        data = fopen( g_file_input, "r" );
+        data_input = fopen( g_file_input, "r" );
         
-        fscanf( data, "%*c %*s %*c" );
-        get_data( data, input, 0, g_amount ); // TODO: Change 0 to ORDER!
+        fscanf( data_input, "%*c %*s %*c" );
+        get_data( data_input, input, 0, g_amount_objects ); // TODO: Change 0 to ORDER!
 
-        fscanf( data, "%*c %*s %*c %c", &has_other_objects );
+        fscanf( data_input, "%*c %*s %*c %c", &has_other_objects );
         for
         (
             ;
-            has_other_objects == '{' && g_amount < amount_objects_maximum;
-            get_data( data, input, 0, ++g_amount ),  // TODO: Change 0 to ORDER!
-            fscanf( data, "%*s %c", &has_other_objects )
+            has_other_objects == '{' && g_amount_objects < amount_objects_maximum;
+            get_data( data_input, input, 0, ++g_amount_objects ),  // TODO: Change 0 to ORDER!
+            fscanf( data_input, "%*s %c", &has_other_objects )
         );
         
-        fclose( data );
+        fclose( data_input );
 
         g_time = input[0][0].time;   // TODO: Change 0 to ORDER!
         
@@ -64,7 +64,7 @@ void * process()
         for
         (
             i = 0;
-            i < g_amount;
+            i < g_amount_objects;
             g_output[i].distance = input[0][0].latitude,
             g_output[i].approach_velocity = input[0][0].longitude,
             ++i

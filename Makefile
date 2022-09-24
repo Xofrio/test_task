@@ -1,8 +1,10 @@
 # Stuff
 
 CC			= gcc
-CFLAGS		= -std=c11 -pthread
-PROJECT		= t
+SFLAGS		= -std=c11
+TFLAGS		= -pthread
+CFLAGS		= ${SFLAGS} ${TFLAGS}
+PROJECT		= helicopta
 
 .PHONY: all clean
 
@@ -12,4 +14,4 @@ ${PROJECT}: main.c process.c recommend.c
 	${CC} ${CFLAGS} -o $@ $^
 
 clean:
-	rm *.o ${PROJECT}
+	rm ${PROJECT}
