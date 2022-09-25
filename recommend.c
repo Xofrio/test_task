@@ -2,9 +2,12 @@
 
 void complete_json()
 {
-    g_data_output = fopen( g_file_output, "a+" );
+    g_data_output = fopen( g_files[file_index_output], "a+" );
     fprintf( g_data_output, "\n\t]\n}\n" );
     fclose( g_data_output );
+
+    pthread_mutex_destroy( &g_mutex );
+	pthread_cond_destroy( &g_condition );
 
     exit( EXIT_SUCCESS );
 }
@@ -17,16 +20,16 @@ void * recommend()
         "WARNING",
         "CRITICAL"
     };
-    size_t k = 0;
-    size_t i;
-    size_t j;
+    struct sigaction    signal_interceptor;
+    size_t              k = 0;
+    size_t              i;
+    size_t              j;
 
-    struct sigaction signal_interceptor;
     memset( &signal_interceptor, 0, sizeof( signal_interceptor ) );
     signal_interceptor.sa_sigaction = complete_json;
     sigaction( SIGINT, &signal_interceptor, NULL );
 
-    g_data_output = fopen( g_file_output, "w" );
+    g_data_output = fopen( g_files[file_index_output], "w" );
     fprintf( g_data_output, "{\n\t\"recommendations\": [\n" );
     fclose( g_data_output );
     
@@ -38,11 +41,11 @@ void * recommend()
             !g_write_happened;
             pthread_cond_wait( &g_condition, &g_mutex )
         );
-        // TODO: Critical means we need to break from for, right?
+        
         for
         (
             i = j = 0;
-            i < g_amount_objects;
+            i < g_amount_objects && j != 2;
             j = g_output[i].distance < critical_distance( g_output[i].distance )
             ? 2
             : (g_output[i].distance < warning_distance_1( g_output[i].distance )
@@ -55,10 +58,10 @@ void * recommend()
             ++i
         );
 
-        g_data_output = fopen( g_file_output, "a+" );
+        g_data_output = fopen( g_files[file_index_output], "a+" );
         k++ > 0 && fprintf ( g_data_output, ",\n" );
         fprintf( g_data_output, "\t\t{\n\t\t\t\"time\": " );
-        fprintf( g_data_output, format( g_time ), g_time );
+        fprintf( g_data_output, format_output( g_time ), g_time );
         fprintf( g_data_output, ",\n\t\t\t\"recommendation\": \"%s\"\n\t\t}", recommendations[j] );
         fclose( g_data_output );
 

@@ -2,10 +2,10 @@
 
 void get_data
 (
-    FILE * const data,
-    struct data_input input[][amount_objects_maximum + 1],
-    size_t const o,
-    size_t const i
+    struct data_input           input[][amount_objects_maximum + 1],
+    FILE *              const   data,
+    size_t              const   o,
+    size_t              const   i
 )
 {
     for
@@ -16,7 +16,7 @@ void get_data
         fscanf
         (
             data,
-            format( input[o][i].latitude ),
+            format_input( input[o][i].latitude ),
             !j          ? &input[o][i].latitude
             : j == 1    ? &input[o][i].longitude
             : j == 2    ? &input[o][i].altitude
@@ -29,11 +29,11 @@ void get_data
 
 void * process()
 {
-    struct data_input input[order][amount_objects_maximum + 1];
-    FILE * data_input;
-    size_t o = 0;
-    size_t i;
-    char has_other_objects;
+    struct data_input   input[order][amount_objects_maximum + 1];
+    FILE *              data_input;
+    size_t              o = 0;
+    size_t              i;
+    char                has_other_objects;
 
     for (;;)
     {
@@ -41,17 +41,17 @@ void * process()
 
         g_amount_objects = has_other_objects = 0;
 
-        data_input = fopen( g_file_input, "r" );
+        data_input = fopen( g_files[file_index_input], "r" );
         
         fscanf( data_input, "%*c %*s %*c" );
-        get_data( data_input, input, 0, g_amount_objects ); // TODO: Change 0 to ORDER!
+        get_data( input, data_input, 0, g_amount_objects ); // TODO: Change 0 to ORDER!
 
         fscanf( data_input, "%*c %*s %*c %c", &has_other_objects );
         for
         (
             ;
             has_other_objects == '{' && g_amount_objects < amount_objects_maximum;
-            get_data( data_input, input, 0, ++g_amount_objects ),  // TODO: Change 0 to ORDER!
+            get_data( input, data_input, 0, ++g_amount_objects ),  // TODO: Change 0 to ORDER!
             fscanf( data_input, "%*s %c", &has_other_objects )
         );
         
@@ -59,16 +59,6 @@ void * process()
 
         g_time = input[0][0].time;   // TODO: Change 0 to ORDER!
         
-        // input[0][0 1 2 3] - me and my 3 doods measurements_0.
-        //TEST (removing this)
-        for
-        (
-            i = 0;
-            i < g_amount_objects;
-            g_output[i].distance = input[0][0].latitude,
-            g_output[i].approach_velocity = input[0][0].longitude,
-            ++i
-        );
         // TODO: Actual algorithm (:  
 
         o = (o + 1) % order;
