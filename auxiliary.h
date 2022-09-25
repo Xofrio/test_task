@@ -27,6 +27,9 @@ index == file_index_input ?         \
 file_name_input file_extension :    \
 file_name_output file_extension
 
+#define fscanf_data( array, o, i, part )   \
+fscanf( data, format_input( array[o][i].part ), &array[o][i].part )
+
 #define format_input( T ) _Generic  \
 (                                   \
     ( T ),                          \
@@ -75,7 +78,7 @@ typedef long double units;
 struct data_input
 {
     units latitude;
-    units longitude;
+    units longtitude;
     units altitude;
     units time;
 };

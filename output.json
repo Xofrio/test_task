@@ -1,12 +1,12 @@
 {
 	"recommendations": [
 		{
-			"time": 10.000000 ,
-			"recommendation": "WARNING"
+			"time": 10.000000,
+			"recommendation": "CRITICAL"
 		},
 		{
-			"time": 10.000000 ,
-			"recommendation": "WARNING"
+			"time": 10.000000,
+			"recommendation": "CRITICAL"
 		}
 	]
 }

@@ -13,15 +13,10 @@ void get_data
         size_t j = 0;
         j < amount_input;
         fscanf( data, "%*s" ),
-        fscanf
-        (
-            data,
-            format_input( input[o][i].latitude ),
-            !j          ? &input[o][i].latitude
-            : j == 1    ? &input[o][i].longitude
-            : j == 2    ? &input[o][i].altitude
-                        : &input[o][i].time
-        ),
+        !j          ? fscanf_data( input, o, i, latitude )
+        : j == 1    ? fscanf_data( input, o, i, longtitude )
+        : j == 2    ? fscanf_data( input, o, i, altitude )
+                    : fscanf_data( input, o, i, time ),
         fscanf( data, "%*c" ),
         ++j
     );
