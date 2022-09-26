@@ -1,5 +1,9 @@
 #include "recommend.h"
 
+/**
+ * @brief   Signal interrupt handler that completes json
+ *          and destroys mutex and conditional variable.
+ */
 void complete_json()
 {
     g_data_output = fopen( g_files[file_index_output], "a+" );
@@ -48,10 +52,10 @@ void * recommend()
             i < g_amount_objects && j != 2;
             j = g_output[i].distance < critical_distance( g_output[i].distance )
             ? 2
-            : (g_output[i].distance < warning_distance_1( g_output[i].distance )
-            && g_output[i].approach_velocity > warning_velocity( g_output[i].approach_velocity )
-            || g_output[i].distance < warning_distance_2( g_output[i].distance )
-            && g_output[i].approach_velocity < warning_velocity( g_output[i].approach_velocity )) 
+            : ( g_output[i].distance < warning_distance_1( g_output[i].distance )
+            &&  g_output[i].approach_velocity > warning_velocity( g_output[i].approach_velocity )
+            ||  g_output[i].distance < warning_distance_2( g_output[i].distance )
+            &&  g_output[i].approach_velocity < warning_velocity( g_output[i].approach_velocity )) 
             && j < 2
             ? 1
             : j,
@@ -59,7 +63,7 @@ void * recommend()
         );
 
         g_data_output = fopen( g_files[file_index_output], "a+" );
-        k++ > 0 && fprintf ( g_data_output, ",\n" );
+        g_amount_observations++ > 0 && fprintf ( g_data_output, ",\n" );
         fprintf( g_data_output, "\t\t{\n\t\t\t\"time\": " );
         fprintf( g_data_output, format_output( g_time ), g_time );
         fprintf( g_data_output, ",\n\t\t\t\"recommendation\": \"%s\"\n\t\t}", recommendations[j] );
