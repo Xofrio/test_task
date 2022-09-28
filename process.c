@@ -43,19 +43,32 @@ static units get_distance
     struct data_input const * const object
 )
 {
-    units phi_1 = to_radians( self->longitude );
-    units phi_2 = to_radians( object->longitude );
-    units theta_1 = to_radians( self->latitude );
-    units theta_2 = to_radians( object->latitude );
-    units delta_height = self->altitude - object->altitude;
-    units distance_2D =
-    acos_
+    units phi_1         = to_radians( self->longitude );
+    units theta_1       = to_radians( self->latitude );
+    units theta_2       = to_radians( object->latitude );
+    units delta_height  = self->altitude - object->altitude;
+    units distance_2D   =
+    acos
     (
-        sin_( theta_1 ) * sin_( theta_2 )
-        + cos_( theta_1 ) * cos_( theta_2 ) * cos_( phi_1 - phi_2 )
-    ) * radius_earth ( phi_1 );
+        sin( theta_1 ) * sin( theta_2 )
+        + cos( theta_1 ) * cos( theta_2 ) * cos( phi_1 - to_radians( object->longitude ))
+    ) * radius_earth( phi_1 );
 
     return distance_2D * distance_2D + delta_height * delta_height;
+}
+
+static units get_velocity_guess
+(
+    struct data_input const * const current,
+    struct data_input const * const previous
+)
+{
+    units delta_time            = current->time         - previous->time;
+    units delta_omega_phi       = ( current->longitude  - previous->longitude ) / delta_time;
+    units delta_omega_theta     = ( current->latitude   - previous->latitude )  / delta_time;
+    units delta_velocity_radius = ( current->altitude   - previous->altitude )  / delta_time;
+    // then what ?
+    return 0;
 }
 
 void * process()
@@ -76,7 +89,7 @@ void * process()
         data_input = fopen( g_files[file_index_input], "r" );
         
         fscanf( data_input, "%*c %*s %*c" );
-        get_data( input, data_input, 0, g_amount_objects ); // TODO: Change 0 to ORDER!
+        get_data( input, data_input, o, g_amount_objects );
 
         fscanf( data_input, "%*c %*s %*c %c", &has_other_objects );
         for
@@ -84,21 +97,21 @@ void * process()
             ;
             has_other_objects == '{'
             && g_amount_objects < amount_objects_maximum;
-            get_data( input, data_input, 0, ++g_amount_objects ),  // TODO: Change 0 to ORDER!
+            get_data( input, data_input, o, ++g_amount_objects ),
             fscanf( data_input, "%*s %c", &has_other_objects )
         );
         
         fclose( data_input );
 
-        g_time = input[0][0].time;  // TODO: Change first 0 to ORDER!
-        self = input[0][0];         // TODO: Change first 0 to ORDER!
+        g_time = input[o][0].time;
+        self = input[o][0];
         
         // TODO: Actual algorithm (: [:(]
         for ( i = 0; i < g_amount_objects; ++i )
         {
             // if some condition - skip observation
             // ( I'm too stupid for extrapolation and splines :( )
-            g_output[i].distance = get_distance( &self, &input[0][i + 1] );
+            g_output[i].distance = get_distance( &self, &input[o][i + 1] );
             // What about velocity and it's equation?
         }
         

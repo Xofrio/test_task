@@ -7,7 +7,7 @@ OFLAG2		= -ftree-vectorize
 WFLAGS		= -Wno-unused-result
 OFLAGS		= ${OFLAG1} ${OFLAG2}
 CFLAGS		= ${SFLAGS} ${TFLAGS} ${MFLAGS} ${OFLAGS} ${WFLAGS}
-PROJECT		= helicopta	
+PROJECT		= helicopta
 
 .PHONY: all clean
 

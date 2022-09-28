@@ -8,12 +8,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tgmath.h>
 #include <unistd.h>
 #include <sys/types.h>
 
 #define amount_objects_maximum 	100U
 #define amount_input 	        4U
-#define order                   (2U + 1U)
+#define order                   3U
 #define amount_seconds_sleep    1U
 #define size_file_name          256U
 #define amount_files            2U
@@ -47,95 +48,55 @@ _Generic                    \
     double:     "%lf",      \
     default:    "%Lf"       \
 )
-#define PI_( T )                \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      acosf( -1.F ),  \
-    double:     acos( -1. ),    \
-    default:    acosl( -1.L )   \
+#define pi_div_180( T )                                 \
+_Generic                                                \
+(                                                       \
+    ( T ),                                              \
+    float:      0.0174532925199432957692369076848861F,  \
+    double:     0.0174532925199432957692369076848861,   \
+    default:    0.0174532925199432957692369076848861L   \
 )
-#define radius_earth( T )   \
-_Generic                    \
-(                           \
-    ( T ),                  \
-    float:      6371.0088F, \
-    double:     6371.0088,  \
-    default:    6371.0088L  \
+#define radius_earth( T )               \
+_Generic                                \
+(                                       \
+    ( T ),                              \
+    float:      6371.0087714150004F,    \
+    double:     6371.0087714150004,     \
+    default:    6371.0087714150004L     \
 )
-#define to_radians( x ) ( x ) * PI_( x ) / 180
-#define cos_( T )               \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      cosf( ( T ) ),  \
-    double:     cos( ( T ) ),   \
-    default:    cosl( ( T ) )   \
-)
-#define sin_( T )               \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      sinf( ( T ) ),  \
-    double:     sin( ( T ) ),   \
-    default:    sinl( ( T ) )   \
-)
-#define sqrt_( T )              \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      sqrtf( ( T ) ), \
-    double:     sqrt( ( T ) ),  \
-    default:    sqrtl( ( T ) )  \
-)
-#define acos_( T )              \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      acosf( ( T ) ), \
-    double:     acos( ( T ) ),  \
-    default:    acosl( ( T ) )  \
-)
-#define critical_distance_base( T ) \
-_Generic                            \
-(                                   \
-    ( T ),                          \
-    float:      20.F,               \
-    double:     20.,                \
-    default:    20.L                \
-)
+#define to_radians( x ) ( x ) * pi_div_180( x )
 #define critical_distance( T )  \
-critical_distance_base( T ) * critical_distance_base( T )
-#define warning_distance_1_base( T )    \
-_Generic                                \
-(                                       \
-    ( T ),                              \
-    float:      50.F,                   \
-    double:     50.,                    \
-    default:    50.L                    \
+_Generic                        \
+(                               \
+    ( T ),                      \
+    float:      400.F,          \
+    double:     400.,           \
+    default:    400.L           \
 )
-#define warning_distance_1( T )  \
-warning_distance_1_base( T ) * warning_distance_1_base( T )
-#define warning_distance_2_base( T )    \
-_Generic                                \
-(                                       \
-    ( T ),                              \
-    float:      40.F,                   \
-    double:     40.,                    \
-    default:    40.L                    \
+#define warning_distance_1( T ) \
+_Generic                        \
+(                               \
+    ( T ),                      \
+    float:      2500.F,         \
+    double:     2500.,          \
+    default:    2500.L          \
 )
-#define warning_distance_2( T )  \
-warning_distance_2_base( T ) * warning_distance_2_base( T )
-#define warning_velocity_base( T )  \
-_Generic                            \
-(                                   \
-    ( T ),                          \
-    float:      300.F,              \
-    double:     300.,               \
-    default:    300.L               \
+#define warning_distance_2( T ) \
+_Generic                        \
+(                               \
+    ( T ),                      \
+    float:      1600.F,         \
+    double:     1600.,          \
+    default:    1600.L          \
 )
-#define warning_velocity( T )  \
-warning_velocity_base( T ) * warning_velocity_base( T )
+#define warning_velocity( T )   \
+_Generic                        \
+(                               \
+    ( T ),                      \
+    float:      90000.F,        \
+    double:     90000.,         \
+    default:    90000.L         \
+)
 
 typedef long double units;
 

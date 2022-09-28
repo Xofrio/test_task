@@ -13,12 +13,13 @@ bool 				g_write_happened;
 
 int main
 (
-	int arguments_count,
-	char * arguments[]
+	int 	arguments_count,
+	char * 	arguments[]
 )
 {
 	pthread_t thread_process;
 	pthread_t thread_recommend;
+
 	g_amount_observations = g_write_happened = g_amount_objects = g_time = 0;
 
 	for
