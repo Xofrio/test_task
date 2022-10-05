@@ -12,11 +12,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#define amount_objects_maximum 	100U
+#define amount_objects_maximum 	101U
 #define amount_input 	        4U
 #define order                   3U
 #define amount_seconds_sleep    1U
 #define size_file_name          256U
+#define amount_buckets          10U
 #define amount_files            2U
 #define file_index_output       1U
 #define file_index_input        0U
@@ -29,8 +30,8 @@ index == file_index_input ?         \
 file_name_input file_extension :    \
 file_name_output file_extension
 
-#define fscanf_data( array, o, i, part )   \
-fscanf( data, format_input( array[o][i].part ), &array[o][i].part )
+#define fscanf_data( file, array, o, i, part )                  \
+fscanf( file, format_input( array[i].real[o].part ), &array[i].real[o].part )
 
 #define format_input( T )   \
 _Generic                    \
@@ -97,32 +98,64 @@ _Generic                        \
     double:     90000.,         \
     default:    90000.L         \
 )
+#define two_point_five( T ) \
+_Generic                    \
+(                           \
+    ( T ),                  \
+    float:      2.5F,       \
+    double:     2.5,        \
+    default:    2.5L        \
+)
+#define point_five( T ) \
+_Generic                \
+(                       \
+    ( T ),              \
+    float:      .5F,    \
+    double:     .5,     \
+    default:    .5L     \
+)
 
 typedef long double units;
 
 /**
- * @brief Contains latitude, longitude, altitude and time in units
+ * @brief   Contains latitude, longitude and altitude in units.
  */
-struct data_input
+struct coordinates
 {
     units latitude;
     units longitude;
     units altitude;
+};
+
+/**
+ * @brief   Contains latitude, longitude, altitude and time in units.
+ */
+struct data_input
+{
+    struct coordinates position;
     units time;
 };
 
 /**
- * @brief Contains distance and approach velocity in units
+ * @brief   Contains latitude, longitude, altitude, time of current object (last 3 observations),
+ *          their guess counterparts, distance and approach velocity
+ *          as well as their guess counterparts, amount of observations and id of current object.
  */
-struct data_output
+struct object_data
 {
-    units distance;
-    units approach_velocity;
+    struct data_input   real[order];
+    struct data_input   guess;
+    units               distance;
+    units               approach_velocity;
+    units               distance_guess;
+    units               approach_velocity_guess;
+    size_t              observations;
+    size_t              id;
 };
 
-extern struct data_output   g_output[amount_objects_maximum];
+extern struct object_data   g_data[amount_objects_maximum + 1];
 extern char                 g_files[amount_files][size_file_name];
-extern FILE *               g_data_output;
+extern FILE *               g_output;
 extern pthread_cond_t       g_condition;
 extern pthread_mutex_t      g_mutex;
 extern units                g_time;

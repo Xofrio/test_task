@@ -6,9 +6,9 @@
  */
 void complete_json()
 {
-    g_data_output = fopen( g_files[file_index_output], "a+" );
-    fprintf( g_data_output, "\n\t]\n}\n" );
-    fclose( g_data_output );
+    g_output = fopen( g_files[file_index_output], "a+" );
+    fprintf( g_output, "\n\t]\n}\n" );
+    fclose( g_output );
 
     pthread_mutex_destroy( &g_mutex );
 	pthread_cond_destroy( &g_condition );
@@ -33,9 +33,9 @@ void * recommend()
     signal_interceptor.sa_sigaction = complete_json;
     sigaction( SIGINT, &signal_interceptor, NULL );
 
-    g_data_output = fopen( g_files[file_index_output], "w" );
-    fprintf( g_data_output, "{\n\t\"recommendations\": [\n" );
-    fclose( g_data_output );
+    g_output = fopen( g_files[file_index_output], "w" );
+    fprintf( g_output, "{\n\t\"recommendations\": [\n" );
+    fclose( g_output );
     
     for (;;)
     {
@@ -48,26 +48,47 @@ void * recommend()
         
         for
         (
-            i = j = 0;
-            i < g_amount_objects && j != 2;
-            j = g_output[i].distance < critical_distance( g_output[i].distance )
+            i = 1,
+            j = 0;
+            i < g_amount_objects + 1 && j != 2;
+            j =
+            (
+                g_data[i].distance < critical_distance( g_data[i].distance )
+
+            ||  g_data[i].distance_guess < critical_distance( g_data[i].distance )
+            )
             ? 2
-            : ( g_output[i].distance < warning_distance_1( g_output[i].distance )
-            &&  g_output[i].approach_velocity > warning_velocity( g_output[i].approach_velocity )
-            ||  g_output[i].distance < warning_distance_2( g_output[i].distance )
-            &&  g_output[i].approach_velocity < warning_velocity( g_output[i].approach_velocity )) 
-            && j < 2
+            :
+            (
+                g_data[i].distance < warning_distance_1( g_data[i].distance )
+            &&  g_data[i].approach_velocity > warning_velocity( g_data[i].approach_velocity )
+
+            ||  g_data[i].distance < warning_distance_2( g_data[i].distance )
+            &&  g_data[i].approach_velocity < warning_velocity( g_data[i].approach_velocity )
+
+            ||  g_data[i].distance_guess < warning_distance_1( g_data[i].distance )
+            &&  g_data[i].approach_velocity_guess > warning_velocity( g_data[i].approach_velocity )
+
+            ||  g_data[i].distance_guess < warning_distance_2( g_data[i].distance )
+            &&  g_data[i].approach_velocity_guess < warning_velocity( g_data[i].approach_velocity )
+            ) && j < 2
             ? 1
             : j,
+            // printf("[%Lf][%Lf][%Lf][%Lf]\n",
+            // g_data[i].distance,
+            // g_data[i].distance_guess,
+            // g_data[i].approach_velocity,
+            // g_data[i].approach_velocity_guess
+            // ),
             ++i
         );
 
-        g_data_output = fopen( g_files[file_index_output], "a+" );
-        g_amount_observations++ > 0 && fprintf ( g_data_output, ",\n" );
-        fprintf( g_data_output, "\t\t{\n\t\t\t\"time\": " );
-        fprintf( g_data_output, format_output( g_time ), g_time );
-        fprintf( g_data_output, ",\n\t\t\t\"recommendation\": \"%s\"\n\t\t}", recommendations[j] );
-        fclose( g_data_output );
+        g_output = fopen( g_files[file_index_output], "a+" );
+        g_amount_observations++ > 0 && fprintf ( g_output, ",\n" );
+        fprintf( g_output, "\t\t{\n\t\t\t\"time\": " );
+        fprintf( g_output, format_output( g_time ), g_time );
+        fprintf( g_output, ",\n\t\t\t\"recommendation\": \"%s\"\n\t\t}", recommendations[j] );
+        fclose( g_output );
 
         g_write_happened = false;
         pthread_mutex_unlock( &g_mutex );

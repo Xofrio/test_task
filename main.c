@@ -1,10 +1,10 @@
 #include "process.h"
 #include "recommend.h"
 
-struct data_output 	g_output[amount_objects_maximum];
+struct object_data	g_data[amount_objects_maximum + 1];
 char 				g_files[amount_files][size_file_name];
-FILE * 				g_data_output;
-pthread_cond_t 		g_condition;
+FILE * 				g_output;
+pthread_cond_t 		g_condition; 
 pthread_mutex_t 	g_mutex;
 units 				g_time;
 size_t 				g_amount_objects;
@@ -47,9 +47,6 @@ int main
 
 	pthread_mutex_destroy( &g_mutex );
 	pthread_cond_destroy( &g_condition );
-
-	// TODO: better to use deque to push tail and remove head
-	// Or keep it like that, but be wary of indices and stuff
 
 	return EXIT_SUCCESS;
 }
