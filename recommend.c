@@ -1,14 +1,14 @@
 #include "recommend.h"
 
-// TODO:    might delete this if we need to always update output.json
-//          (1 recommendaion at a time, so we don't need to intercept sigint
-//          and sort of "complete" the file by adding ]})
 /**
  * @brief   Signal interrupt handler that completes json
  *          and destroys mutex and conditional variable.
  */
 void complete_json()
-{
+{   
+    // TODO:    might delete this if we need to always update output.json
+    //          (1 recommendaion at a time, so we don't need to
+    //          sort of "complete" the file by adding \n\t]\n}\n)
     g_output = fopen( g_files[file_index_output], "a+" );
     fprintf( g_output, "\n\t]\n}\n" );
     fclose( g_output );
@@ -53,7 +53,7 @@ void * recommend()
         (
             i = objects_start,
             j = 0;
-            i < g_amount_objects + objects_start && j != 2;
+            i < g_amount_objects + objects_start /*TODO: uncomment this: && j != 2 */;
             j =
             (
                 g_data[i].distance < critical_distance( g_data[i].distance )
@@ -78,14 +78,15 @@ void * recommend()
             ? 1
             : j,
             // TODO: Delete this printf
-            printf
-            (
-                "[%Lf][%Lf][%Lf][%Lf]\n",
-                g_data[i].distance,
-                g_data[i].distance_guess,
-                g_data[i].approach_velocity,
-                g_data[i].approach_velocity_guess
-            ),
+            // printf
+            // (
+            //     "Vehicle [%zu][%.10Lf][%.10Lf][%.10Lf][%.10Lf]\n",
+            //     g_data[i].id,
+            //     g_data[i].distance,
+            //     g_data[i].distance_guess,
+            //     g_data[i].approach_velocity,
+            //     g_data[i].approach_velocity_guess
+            // ),
             ++i
         );
 
@@ -99,6 +100,6 @@ void * recommend()
         g_write_happened = false;
         pthread_mutex_unlock( &g_mutex );
 
-        sleep( amount_seconds_sleep ); // TODO: Change to usleep or keep it like this
+        sleep( 4 * amount_seconds_sleep ); // TODO: Change to usleep or keep it like this
     }
 }

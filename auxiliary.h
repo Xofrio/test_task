@@ -32,22 +32,15 @@ index == file_index_input ?         \
 file_name_input file_extension :    \
 file_name_output file_extension
 
-#define fscanf_data( file, array, o, i, part )                  \
+#define fscanf_data( file, array, o, i, part )                                  \
 fscanf( file, format_input( array[i].real[o].part ), &array[i].real[o].part )
 
-#define guess_main( object, p, pp, ppp, part )  \
-make_guess                                      \
-(                                               \
-    object->real[p].position.part,              \
-    object->real[pp].position.part,             \
-    object->real[ppp].position.part             \
-)
-#define guess_additional( object, pp, ppp, part )   \
-make_guess                                          \
-(                                                   \
-    object->guess.position.part,                    \
-    object->real[pp].position.part,                 \
-    object->real[ppp].position.part                 \
+#define guess( object, order_2, order_1, order_0, part )    \
+make_guess                                                  \
+(                                                           \
+    ( order_2 ).position.part,                              \
+    object->real[order_1].position.part,                    \
+    object->real[order_0].position.part                     \
 )
 
 #define format_input( T )   \

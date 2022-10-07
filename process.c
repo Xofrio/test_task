@@ -1,4 +1,7 @@
 #include "process.h"
+// TODO: check guess COPY INTO REAL or vice versa
+// OBS 5 is not good and everything after it (maybe because they're not generated)
+// TODO: make somewhat generator
 
 /**
  * @brief           Computes distance between two objects.
@@ -68,14 +71,32 @@ static void guess_coordinates
 )
 {
     position->latitude =
-    mode    ? guess_main( object, order_2, order_1, order_0, latitude )
-            : guess_additional( object, order_1, order_0, latitude );
+    guess
+    (
+        object,
+        ( mode ? object->real[order_2] : object->guess ),
+        order_1,
+        order_0,
+        latitude
+    );
     position->longitude =
-    mode    ? guess_main( object, order_2, order_1, order_0, longitude )
-            : guess_additional( object, order_1, order_0, longitude );
+    guess
+    (
+        object,
+        ( mode ? object->real[order_2] : object->guess ),
+        order_1,
+        order_0,
+        longitude
+    );
     position->altitude = 
-    mode    ? guess_main( object, order_2, order_1, order_0, altitude )
-            : guess_additional( object, order_1, order_0, altitude );
+    guess
+    (
+        object,
+        ( mode ? object->real[order_2] : object->guess ),
+        order_1,
+        order_0,
+        altitude
+    );     
 }
 
 /**
@@ -140,7 +161,7 @@ static void get_data
 
     if
     (
-        input[index].observations > 3
+        input[index].observations > 4
     &&  get_distance
         (
             &input[index].real[order_0].position,
@@ -300,10 +321,8 @@ void * process()
     size_t  amount_to_delete;
     size_t  self_order_current;
     size_t  self_order_previous;
-    size_t  self_order_previous_to_previous;
     size_t  object_order_current;
     size_t  object_order_previous;
-    size_t  object_order_previous_to_previous;
     char    has_other_objects;
     bool    got_new = false;
 
@@ -362,14 +381,14 @@ void * process()
         );
         fclose( data_input );
 
+
         self_order_current                          =
         ( g_data[0].observations + order - 1 ) % order;
         self_order_previous                         =
         ( g_data[0].observations + order - 2 ) % order;
-        self_order_previous_to_previous             =
-        g_data[0].observations % order;
         g_time                                      =
         g_data[0].real[self_order_current].time;
+
         for
         (
             i = objects_start;
@@ -402,8 +421,6 @@ void * process()
             ( g_data[i].observations + order - 1 ) % order;
             object_order_previous               =
             ( g_data[i].observations + order - 2 ) % order;
-            object_order_previous_to_previous   =
-            g_data[i].observations % order;
 
             g_data[i].distance =
             get_distance
@@ -411,41 +428,38 @@ void * process()
                 &g_data[0].real[self_order_current].position,
                 &g_data[i].real[object_order_current].position
             );
-
-            if ( g_data[i].observations > 1 )
-            {
-                g_data[i].approach_velocity =
-                get_approach_velocity
+            g_data[i].approach_velocity = g_data[i].observations > 1
+            ?   get_approach_velocity
                 (
                     &g_data[0].real[self_order_current],
                     &g_data[0].real[self_order_previous],
                     &g_data[i].real[object_order_current],
                     &g_data[i].real[object_order_previous]
-                );
+                )
+            :   0;
 
-                if ( g_data[i].observations > 2 )
-                {
-                    g_data[i].distance_guess =
-                    get_distance
-                    (
-                        &g_data[0].guess.position,
-                        &g_data[i].guess.position
-                    );
-                    g_data[i].approach_velocity_guess =
-                    get_approach_velocity
-                    (
-                        &g_data[0].guess,
-                        &g_data[i].guess,
-                        &g_data[0].real[self_order_previous],
-                        &g_data[i].real[object_order_previous]
-                    );
-                }
+            if ( g_data[i].observations < 4 )
+            {
+                g_data[i].approach_velocity_guess = 0;
+                g_data[i].distance_guess =
+                warning_distance_1( g_time ) + warning_distance_1( g_time );
             }
             else
             {
-                g_data[i].approach_velocity = g_data[i].approach_velocity_guess = 0;
                 g_data[i].distance_guess =
-                warning_distance_1( g_time ) * warning_distance_1( g_time );
+                get_distance
+                (
+                    &g_data[0].guess.position,
+                    &g_data[i].guess.position
+                );
+                g_data[i].approach_velocity_guess =
+                get_approach_velocity
+                (
+                    &g_data[0].guess,
+                    &g_data[i].guess,
+                    &g_data[0].real[self_order_previous],
+                    &g_data[i].real[object_order_previous]
+                );
             }
         }
 
@@ -453,6 +467,6 @@ void * process()
         pthread_cond_signal( &g_condition );
         pthread_mutex_unlock( &g_mutex );
 
-        sleep( amount_seconds_sleep );
+        sleep( 4 * amount_seconds_sleep );
     }
 }
