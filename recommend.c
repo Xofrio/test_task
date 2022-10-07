@@ -1,5 +1,8 @@
 #include "recommend.h"
 
+// TODO:    might delete this if we need to always update output.json
+//          (1 recommendaion at a time, so we don't need to intercept sigint
+//          and sort of "complete" the file by adding ]})
 /**
  * @brief   Signal interrupt handler that completes json
  *          and destroys mutex and conditional variable.
@@ -48,9 +51,9 @@ void * recommend()
         
         for
         (
-            i = 1,
+            i = objects_start,
             j = 0;
-            i < g_amount_objects + 1 && j != 2;
+            i < g_amount_objects + objects_start && j != 2;
             j =
             (
                 g_data[i].distance < critical_distance( g_data[i].distance )
@@ -74,12 +77,15 @@ void * recommend()
             ) && j < 2
             ? 1
             : j,
-            // printf("[%Lf][%Lf][%Lf][%Lf]\n",
-            // g_data[i].distance,
-            // g_data[i].distance_guess,
-            // g_data[i].approach_velocity,
-            // g_data[i].approach_velocity_guess
-            // ),
+            // TODO: Delete this printf
+            printf
+            (
+                "[%Lf][%Lf][%Lf][%Lf]\n",
+                g_data[i].distance,
+                g_data[i].distance_guess,
+                g_data[i].approach_velocity,
+                g_data[i].approach_velocity_guess
+            ),
             ++i
         );
 

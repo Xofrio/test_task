@@ -1,58 +1,162 @@
 #include "process.h"
 
 /**
- * @brief       Fills input array at specified order and specified object
- *              with data from specified json file.
+ * @brief           Computes distance between two objects.
+ * @param object_1  first object
+ * @param object_2  second object
+ * @return          squared distance between two objects in 3d
+ */
+static units get_distance
+(
+    struct coordinates const * const object_1,
+    struct coordinates const * const object_2
+)
+{
+    units phi_1             = to_radians( object_1->longitude );
+    units theta_1           = to_radians( object_1->latitude );
+    units theta_2           = to_radians( object_2->latitude );
+    units delta_altitude    = object_1->altitude - object_2->altitude;
+    units distance_2D       =
+    acos
+    (
+        sin( theta_1 ) * sin( theta_2 )
+    +   cos( theta_1 ) * cos( theta_2 )
+        * cos( phi_1 - to_radians( object_2->longitude ))
+    ) * radius_earth( phi_1 );
+
+    return distance_2D * distance_2D + delta_altitude * delta_altitude;
+}
+
+/**
+ * @brief           Makes a guess coordinate based on given coordinates.
+ * @param order_2   current observation
+ * @param order_1   previous observation
+ * @param order_0   previous to previous observation
+ * @return          2nd order approximation - coordinate prediction
+ */
+static units make_guess
+(
+    units const order_2,
+    units const order_1,
+    units const order_0
+)
+{
+    return
+        two_point_five( order_2 ) * order_2
+    -   ( order_1 + order_1 )
+    +   point_five( order_0 ) * order_0;
+}
+
+/**
+ * @brief           Makes a guess for all 3 coordinates.
+ * @param object    current object
+ * @param order_2   previous observation
+ * @param order_1   previous to previous observation
+ * @param order_0   previous to previous to previous observation
+ * @param mode      true means that we make a guess from 3 real parts,
+ *                  false means that we make a guess from 2 real parts
+ *                  and 1 guess part
+ */
+static void guess_coordinates
+(
+    struct object_data * const  object,
+    struct coordinates * const  position,
+    size_t  const               order_2,
+    size_t  const               order_1,
+    size_t  const               order_0,
+    bool    const               mode
+)
+{
+    position->latitude =
+    mode    ? guess_main( object, order_2, order_1, order_0, latitude )
+            : guess_additional( object, order_1, order_0, latitude );
+    position->longitude =
+    mode    ? guess_main( object, order_2, order_1, order_0, longitude )
+            : guess_additional( object, order_1, order_0, longitude );
+    position->altitude = 
+    mode    ? guess_main( object, order_2, order_1, order_0, altitude )
+            : guess_additional( object, order_1, order_0, altitude );
+}
+
+/**
+ * @brief       Fills input array with data from specified json file.
  * @param input array to store data
  * @param data  json file containing data
  * @param index index of the current object
  */
-void get_data
+static void get_data
 (
     struct object_data          input[],
     FILE *              const   data,
     size_t              const   index
 )
 {
+    struct coordinates guess_alternative;
+    struct coordinates guess_previous;
+    size_t const order_2 = ( input[index].observations + order - 1 ) % order;
+    size_t const order_1 = ( input[index].observations + order - 2 ) % order;
+    size_t const order_0 = input[index].observations % order;
+
+    if ( input[index].observations > 3 )
+    {
+        guess_coordinates
+        (
+            &input[index],
+            &guess_alternative,
+            order_2,
+            order_1,
+            order_0,
+            false
+        );
+    }
+
+    if ( input[index].observations > 2 )
+    {
+        guess_previous = input[index].guess.position;
+        guess_coordinates
+        (
+            &input[index],
+            &input[index].guess.position,
+            order_2,
+            order_1,
+            order_0,
+            true
+        );
+    }
+
     for
     (
         size_t j        = 0,
         current_order   = input[index].observations++ % order;
         j < amount_input;
         fscanf( data, "%*s" ),
-        !j          ? fscanf_data( data, input, current_order, index, position.latitude )
-        : j == 1    ? fscanf_data( data, input, current_order, index, position.longitude )
-        : j == 2    ? fscanf_data( data, input, current_order, index, position.altitude )
-                    : fscanf_data( data, input, current_order, index, time ),
+        !j      ? fscanf_data( data, input, current_order, index, position.latitude )
+    :   j == 1  ? fscanf_data( data, input, current_order, index, position.longitude )
+    :   j == 2  ? fscanf_data( data, input, current_order, index, position.altitude )
+                : fscanf_data( data, input, current_order, index, time ),
         fscanf( data, "%*c" ),
         ++j
     );
-}
 
-/**
- * @brief           Computes distance between two objects.
- * @param first     first object
- * @param second    second object
- * @return          squared distance between two objects in 3d
- */
-static units get_distance
-(
-    struct coordinates const * const first,
-    struct coordinates const * const second
-)
-{
-    units phi_1             = to_radians( first->longitude );
-    units theta_1           = to_radians( first->latitude );
-    units theta_2           = to_radians( second->latitude );
-    units delta_altitude    = first->altitude - second->altitude;
-    units distance_2D       =
-    acos
+    if
     (
-        sin( theta_1 ) * sin( theta_2 )
-        + cos( theta_1 ) * cos( theta_2 ) * cos( phi_1 - to_radians( second->longitude ))
-    ) * radius_earth( phi_1 );
-
-    return distance_2D * distance_2D + delta_altitude * delta_altitude;
+        input[index].observations > 3
+    &&  get_distance
+        (
+            &input[index].real[order_0].position,
+            &input[index].guess.position
+        )
+        >
+        get_distance
+        (
+            &input[index].real[order_0].position,
+            &guess_alternative
+        )
+    )
+    {
+        input[index].real[order_2].position = guess_previous;
+        input[index].guess.position = guess_alternative;
+    }  
 }
 
 /**
@@ -100,47 +204,31 @@ static units get_approach_velocity
     (
         (
             delta_altitude_current * delta_altitude_current
-        +   delta_longitude_current * delta_longitude_current * radius_current * radius_current
+        +   radius_current * radius_current *
+            delta_longitude_current * delta_longitude_current
             * sin_delta_latitude_current * sin_delta_latitude_current
-        +   delta_latitude_current * delta_latitude_current * radius_current * radius_current
+        +   radius_current * radius_current *
+            delta_latitude_current * delta_latitude_current
         )
         - 
         (
             delta_altitude_previous * delta_altitude_previous
-        +   delta_longitude_previous * delta_longitude_previous * radius_previous * radius_previous
+        +   radius_previous * radius_previous *
+            delta_longitude_previous * delta_longitude_previous
             * sin_delta_latitude_previous * sin_delta_latitude_previous
-        +   delta_latitude_previous * delta_latitude_previous * radius_previous * radius_previous
+        +   radius_previous * radius_previous *
+            delta_latitude_previous * delta_latitude_previous
         )
-    ) / ( delta_time * delta_time );
-}
-
-/**
- * @brief           Makes a guess coordinate based on given coordinates.
- * @param order_2   current observation
- * @param order_1   previous observation
- * @param order_0   previous to previous observation
- * @return          2nd order approximation - coordinate prediction
- */
-static units make_guess
-(
-    units const order_2,
-    units const order_1,
-    units const order_0
-)
-{
-    return
-        two_point_five( order_2 ) * order_2
-    -   ( order_1 + order_1 )
-    +   point_five( order_0 ) * order_0;
+    ) / ( delta_time * delta_time ) * seconds_per_hour;
 }
 
 /**
  * @brief           Compares id's of two objects of type object_data.
  * @param first     first object
  * @param second    second object
- * @return          integer < 0, if first id is lower,
- *                  integer = 0, if first id is equal to second,
- *                  integer > 0, if first id is higher
+ * @return          1, if first id is higher,
+ *                  0, if first id is equal to second,
+ *                  -1, if first id is lower
  */
 static int object_id_ascending
 (
@@ -148,9 +236,10 @@ static int object_id_ascending
     void const * const second
 )
 {
-    return
-        (( struct object_data * ) first )->id
-    -   (( struct object_data * ) second )->id;
+    size_t first_id     = (( struct object_data * ) first )->id;
+    size_t second_id    = (( struct object_data * ) second )->id;
+
+    return first_id > second_id ? 1 : first_id == second_id ? 0 : -1;
 }
 
 /**
@@ -180,12 +269,13 @@ static void swap
  */
 static size_t find_by_id
 (
-    struct object_data * begin,
-    struct object_data * end,
-    size_t const id
+    struct object_data *    begin,
+    struct object_data *    end,
+    size_t const            id
 )
 {
     struct object_data * begin_initial = begin;
+
     for
     (
         struct object_data * middle;
@@ -195,8 +285,9 @@ static size_t find_by_id
     {
         middle = begin + ( end - begin ) / 2;
 
-        if ( middle->id == id ) return middle - begin_initial + 1;
+        if ( middle->id == id ) return middle - begin_initial + objects_start;
     }
+
     return amount_objects_maximum;
 }
 
@@ -214,7 +305,7 @@ void * process()
     size_t  object_order_previous;
     size_t  object_order_previous_to_previous;
     char    has_other_objects;
-    bool    got_new;
+    bool    got_new = false;
 
     for (;;)
     {
@@ -227,7 +318,6 @@ void * process()
         get_data( g_data, data_input, 0 );
         g_data[0].id = 0;   // TODO: might be unnecessary, so delete this
         fscanf( data_input, "%*c %*s %*c %c", &has_other_objects );
-        got_new = false;
         for
         (
             ;
@@ -237,7 +327,7 @@ void * process()
             current =
             find_by_id
             (
-                g_data + 1,
+                g_data + objects_start,
                 g_data + g_amount_objects,
                 id
             ),
@@ -253,23 +343,37 @@ void * process()
                 :   0
             ),
             get_data( g_data, data_input, current ),
-            got_new ? qsort( g_data, g_amount_objects + 1, sizeof( g_data[0] ), object_id_ascending ) : NULL,
-            fscanf( data_input, "%*s %c", &has_other_objects ),
-            got_new = false
+            (
+                got_new
+                ?
+                (
+                    qsort
+                    (
+                    g_data,
+                    g_amount_objects + objects_start,
+                    sizeof( g_data[0] ),
+                    object_id_ascending
+                    ),
+                    got_new = false
+                )
+                : 0
+            ),
+            fscanf( data_input, "%*s %c", &has_other_objects )
         );
         fclose( data_input );
 
-        // TODO: delete this
-        // sleep( 3 );
-    
-        self_order_current              = ( g_data[0].observations + ( order - 1 )) % order;
-        self_order_previous             = ( g_data[0].observations + ( order - 2 )) % order;
-        self_order_previous_to_previous = g_data[0].observations % order;
-        g_time                          = g_data[0].real[self_order_current].time;
+        self_order_current                          =
+        ( g_data[0].observations + order - 1 ) % order;
+        self_order_previous                         =
+        ( g_data[0].observations + order - 2 ) % order;
+        self_order_previous_to_previous             =
+        g_data[0].observations % order;
+        g_time                                      =
+        g_data[0].real[self_order_current].time;
         for
         (
-            i = 1;
-            i < g_amount_objects + 1;
+            i = objects_start;
+            i < g_amount_objects + objects_start;
             (
                 g_data[i].real[( g_data[i].observations + ( order - 1 )) % order].time
             !=  g_time
@@ -278,44 +382,28 @@ void * process()
             ),
             ++i
         );
-        qsort( g_data, g_amount_objects + 1, sizeof( g_data[0] ), object_id_ascending );
+        qsort
+        (
+            g_data,
+            g_amount_objects + objects_start,
+            sizeof( g_data[0] ),
+            object_id_ascending
+        );
         g_amount_objects -= amount_to_delete;
 
-        if ( g_data[0].observations > 2 )
-        {
-            g_data[0].guess.position.latitude =
-            make_guess
-            (
-                g_data[0].real[self_order_current].position.latitude,
-                g_data[0].real[self_order_previous].position.latitude,
-                g_data[0].real[self_order_previous_to_previous].position.latitude
-            );
-            g_data[0].guess.position.longitude =
-            make_guess
-            (
-                g_data[0].real[self_order_current].position.longitude,
-                g_data[0].real[self_order_previous].position.longitude,
-                g_data[0].real[self_order_previous_to_previous].position.longitude
-            );
-            g_data[0].guess.position.altitude =
-            make_guess
-            (
-                g_data[0].real[self_order_current].position.altitude,
-                g_data[0].real[self_order_previous].position.altitude,
-                g_data[0].real[self_order_previous_to_previous].position.altitude
-            );
-        }
-        
         for
         (
-            i = 1;
-            i < g_amount_objects + 1;
+            i = objects_start;
+            i < g_amount_objects + objects_start;
             ++i
         )
         {
-            object_order_current                = ( g_data[i].observations + ( order - 1 )) % order;
-            object_order_previous               = ( g_data[i].observations + ( order - 2 )) % order;
-            object_order_previous_to_previous   = g_data[i].observations % order;
+            object_order_current                =
+            ( g_data[i].observations + order - 1 ) % order;
+            object_order_previous               =
+            ( g_data[i].observations + order - 2 ) % order;
+            object_order_previous_to_previous   =
+            g_data[i].observations % order;
 
             g_data[i].distance =
             get_distance
@@ -343,7 +431,6 @@ void * process()
                         &g_data[0].guess.position,
                         &g_data[i].guess.position
                     );
-                    
                     g_data[i].approach_velocity_guess =
                     get_approach_velocity
                     (
@@ -352,8 +439,6 @@ void * process()
                         &g_data[0].real[self_order_previous],
                         &g_data[i].real[object_order_previous]
                     );
-                    // TODO: add guess array
-                    // Add +180 degrees EVERYWHERE for longitude
                 }
             }
             else
@@ -367,5 +452,7 @@ void * process()
         g_write_happened = true;
         pthread_cond_signal( &g_condition );
         pthread_mutex_unlock( &g_mutex );
+
+        sleep( amount_seconds_sleep );
     }
 }

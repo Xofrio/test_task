@@ -12,15 +12,17 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#define amount_objects_maximum 	101U
-#define amount_input 	        4U
-#define order                   3U
-#define amount_seconds_sleep    1U
-#define size_file_name          256U
-#define amount_buckets          10U
-#define amount_files            2U
-#define file_index_output       1U
-#define file_index_input        0U
+#define amount_objects_maximum 	101UL
+#define amount_input 	        4UL
+#define order                   3UL
+#define amount_seconds_sleep    1UL
+#define size_file_name          256UL
+#define amount_buckets          10UL
+#define amount_files            2UL
+#define file_index_output       1UL
+#define file_index_input        0UL
+#define objects_start           1UL
+#define seconds_per_hour        3600UL
 
 #define file_name_input         "input"
 #define file_name_output        "output"
@@ -32,6 +34,21 @@ file_name_output file_extension
 
 #define fscanf_data( file, array, o, i, part )                  \
 fscanf( file, format_input( array[i].real[o].part ), &array[i].real[o].part )
+
+#define guess_main( object, p, pp, ppp, part )  \
+make_guess                                      \
+(                                               \
+    object->real[p].position.part,              \
+    object->real[pp].position.part,             \
+    object->real[ppp].position.part             \
+)
+#define guess_additional( object, pp, ppp, part )   \
+make_guess                                          \
+(                                                   \
+    object->guess.position.part,                    \
+    object->real[pp].position.part,                 \
+    object->real[ppp].position.part                 \
+)
 
 #define format_input( T )   \
 _Generic                    \
