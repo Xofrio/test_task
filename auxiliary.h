@@ -23,6 +23,10 @@
 #define file_index_input        0UL
 #define objects_start           1UL
 #define seconds_per_hour        3600UL
+#define critical_distance       400UL
+#define warning_distance_1      2500UL
+#define warning_distance_2      1600UL
+#define warning_velocity        90000UL
 
 #define file_name_input         "input"
 #define file_name_output        "output"
@@ -76,37 +80,13 @@ _Generic                                \
     default:    6371.0087714150004L     \
 )
 #define to_radians( x ) ( x ) * pi_div_180( x )
-#define critical_distance( T )  \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      400.F,          \
-    double:     400.,           \
-    default:    400.L           \
-)
-#define warning_distance_1( T ) \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      2500.F,         \
-    double:     2500.,          \
-    default:    2500.L          \
-)
-#define warning_distance_2( T ) \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      1600.F,         \
-    double:     1600.,          \
-    default:    1600.L          \
-)
-#define warning_velocity( T )   \
-_Generic                        \
-(                               \
-    ( T ),                      \
-    float:      90000.F,        \
-    double:     90000.,         \
-    default:    90000.L         \
+#define kilometers_per_meter( T )   \
+_Generic                            \
+(                                   \
+    ( T ),                          \
+    float:      0.001F,             \
+    double:     0.001,              \
+    default:    0.001L              \
 )
 #define two_point_five( T ) \
 _Generic                    \

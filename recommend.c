@@ -53,40 +53,47 @@ void * recommend()
         (
             i = objects_start,
             j = 0;
-            i < g_amount_objects + objects_start /*TODO: uncomment this: && j != 2 */;
+            i < g_amount_objects + objects_start && j != 2;
             j =
             (
-                g_data[i].distance < critical_distance( g_data[i].distance )
+                g_data[i].distance < critical_distance
 
-            ||  g_data[i].distance_guess < critical_distance( g_data[i].distance )
+            ||  g_data[i].distance_guess < critical_distance
             )
             ? 2
             :
             (
-                g_data[i].distance < warning_distance_1( g_data[i].distance )
-            &&  g_data[i].approach_velocity > warning_velocity( g_data[i].approach_velocity )
+                g_data[i].distance < warning_distance_1
+            &&  g_data[i].approach_velocity > warning_velocity
 
-            ||  g_data[i].distance < warning_distance_2( g_data[i].distance )
-            &&  g_data[i].approach_velocity < warning_velocity( g_data[i].approach_velocity )
+            ||  g_data[i].distance < warning_distance_2
+            &&  g_data[i].approach_velocity < warning_velocity
 
-            ||  g_data[i].distance_guess < warning_distance_1( g_data[i].distance )
-            &&  g_data[i].approach_velocity_guess > warning_velocity( g_data[i].approach_velocity )
+            ||  g_data[i].distance_guess < warning_distance_2
+            &&  g_data[i].approach_velocity_guess > warning_velocity
 
-            ||  g_data[i].distance_guess < warning_distance_2( g_data[i].distance )
-            &&  g_data[i].approach_velocity_guess < warning_velocity( g_data[i].approach_velocity )
+            ||  g_data[i].distance_guess < warning_distance_2
+            &&  g_data[i].approach_velocity_guess < warning_velocity
             ) && j < 2
             ? 1
             : j,
-            // TODO: Delete this printf
-            // printf
-            // (
-            //     "Vehicle [%zu][%.10Lf][%.10Lf][%.10Lf][%.10Lf]\n",
-            //     g_data[i].id,
-            //     g_data[i].distance,
-            //     g_data[i].distance_guess,
-            //     g_data[i].approach_velocity,
-            //     g_data[i].approach_velocity_guess
-            // ),
+            ++i
+        );
+
+        // TODO: Delete this for loop
+        for
+        (
+            i = objects_start;
+            i < g_amount_objects + objects_start;
+            printf
+            (
+                "Vehicle [%zu][%.10Lf][%.10Lf][%.10Lf][%.10Lf]\n",
+                g_data[i].id,
+                sqrt( g_data[i].distance ),
+                sqrt( g_data[i].distance_guess ),
+                sqrt( g_data[i].approach_velocity ),
+                sqrt( g_data[i].approach_velocity_guess )
+            ),
             ++i
         );
 

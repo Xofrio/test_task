@@ -145,10 +145,10 @@ static void get_data
         );
     }
 
+    size_t current_order = input[index].observations++ % order;
     for
-    (
-        size_t j        = 0,
-        current_order   = input[index].observations++ % order;
+    ( 
+        size_t j = 0;
         j < amount_input;
         fscanf( data, "%*s" ),
         !j      ? fscanf_data( data, input, current_order, index, position.latitude )
@@ -158,6 +158,8 @@ static void get_data
         fscanf( data, "%*c" ),
         ++j
     );
+    input[index].real[current_order].position.altitude *= 
+    kilometers_per_meter( input[index].real[current_order].position.altitude );
 
     if
     (
@@ -441,8 +443,7 @@ void * process()
             if ( g_data[i].observations < 4 )
             {
                 g_data[i].approach_velocity_guess = 0;
-                g_data[i].distance_guess =
-                warning_distance_1( g_time ) + warning_distance_1( g_time );
+                g_data[i].distance_guess = warning_distance_1 + warning_distance_1;
             }
             else
             {
