@@ -272,8 +272,6 @@ static size_t find_by_id
     return amount_objects_maximum;
 }
 
-char fileNAM[] = "./input/0.json";
-
 void * process()
 {
     FILE *  data_input;
@@ -294,10 +292,10 @@ void * process()
 
         amount_to_delete = has_other_objects = 0;
 
-        data_input = fopen( fileNAM, "r" );
+        data_input = fopen( g_input_file, "r" );    // TODO: change to g_files[file_index_input]
         fscanf( data_input, "%*c %*s %*c" );
         get_data( g_data, data_input, 0 );
-        g_data[0].id = 0;   // TODO: might be unnecessary, so delete this
+        g_data[0].id = 0;                           // TODO: might be unnecessary, so delete this
         fscanf( data_input, "%*c %*s %*c %c", &has_other_objects );
         for
         (
@@ -429,7 +427,7 @@ void * process()
             }
         }
 
-        fileNAM[8] = g_amount_observations + 1 + '0';
+        g_input_file[8] = g_amount_observations + 1 + '0';  // TODO: remove this.
 
         g_write_happened = true;
         pthread_cond_signal( &g_condition );

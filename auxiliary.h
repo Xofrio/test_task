@@ -145,6 +145,7 @@ struct object_data
 
 extern struct object_data   g_data[amount_objects_maximum + 1];
 extern char                 g_files[amount_files][size_file_name];
+extern char                 g_input_file[15];   // TODO: remove this.
 extern FILE *               g_output;
 extern pthread_cond_t       g_condition;
 extern pthread_mutex_t      g_mutex;

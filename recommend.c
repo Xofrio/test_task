@@ -87,7 +87,7 @@ void * recommend()
         fprintf( g_output, ",\n\t\t\t\"recommendation\": \"%s\"\n\t\t}", recommendations[j] );
         fclose( g_output );
 
-        if ( g_amount_observations == 10 ) raise(SIGINT);
+        if ( g_amount_observations == 10 ) raise(SIGINT);   // TODO: remove this.
 
         g_write_happened = false;
         pthread_mutex_unlock( &g_mutex );

@@ -3,6 +3,7 @@
 
 struct object_data	g_data[amount_objects_maximum + 1];
 char 				g_files[amount_files][size_file_name];
+char				g_input_file[15] = "./input/0.json";	// TODO: remove this.
 FILE * 				g_output;
 pthread_cond_t 		g_condition; 
 pthread_mutex_t 	g_mutex;
