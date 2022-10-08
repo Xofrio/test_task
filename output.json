@@ -2,11 +2,43 @@
 	"recommendations": [
 		{
 			"time": 0.000000,
-			"recommendation": "NO_THREAT"
+			"recommendation": "WARNING"
 		},
 		{
-			"time": 0.000000,
-			"recommendation": "NO_THREAT"
+			"time": 1.000000,
+			"recommendation": "WARNING"
+		},
+		{
+			"time": 2.000000,
+			"recommendation": "WARNING"
+		},
+		{
+			"time": 3.000000,
+			"recommendation": "WARNING"
+		},
+		{
+			"time": 4.000000,
+			"recommendation": "WARNING"
+		},
+		{
+			"time": 5.000000,
+			"recommendation": "WARNING"
+		},
+		{
+			"time": 6.000000,
+			"recommendation": "WARNING"
+		},
+		{
+			"time": 7.000000,
+			"recommendation": "WARNING"
+		},
+		{
+			"time": 8.000000,
+			"recommendation": "WARNING"
+		},
+		{
+			"time": 9.000000,
+			"recommendation": "CRITICAL"
 		}
 	]
 }

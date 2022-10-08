@@ -26,7 +26,7 @@
 #define critical_distance       400UL
 #define warning_distance_1      2500UL
 #define warning_distance_2      1600UL
-#define warning_velocity        90000UL
+#define warning_velocity        300UL
 
 #define file_name_input         "input"
 #define file_name_output        "output"

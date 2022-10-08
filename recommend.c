@@ -5,7 +5,7 @@
  *          and destroys mutex and conditional variable.
  */
 void complete_json()
-{   
+{
     // TODO:    might delete this if we need to always update output.json
     //          (1 recommendaion at a time, so we don't need to
     //          sort of "complete" the file by adding \n\t]\n}\n)
@@ -80,23 +80,6 @@ void * recommend()
             ++i
         );
 
-        // TODO: Delete this for loop
-        for
-        (
-            i = objects_start;
-            i < g_amount_objects + objects_start;
-            printf
-            (
-                "Vehicle [%zu][%.10Lf][%.10Lf][%.10Lf][%.10Lf]\n",
-                g_data[i].id,
-                sqrt( g_data[i].distance ),
-                sqrt( g_data[i].distance_guess ),
-                sqrt( g_data[i].approach_velocity ),
-                sqrt( g_data[i].approach_velocity_guess )
-            ),
-            ++i
-        );
-
         g_output = fopen( g_files[file_index_output], "a+" );
         g_amount_observations++ > 0 && fprintf ( g_output, ",\n" );
         fprintf( g_output, "\t\t{\n\t\t\t\"time\": " );
@@ -104,9 +87,11 @@ void * recommend()
         fprintf( g_output, ",\n\t\t\t\"recommendation\": \"%s\"\n\t\t}", recommendations[j] );
         fclose( g_output );
 
+        if ( g_amount_observations == 10 ) raise(SIGINT);
+
         g_write_happened = false;
         pthread_mutex_unlock( &g_mutex );
 
-        sleep( 4 * amount_seconds_sleep ); // TODO: Change to usleep or keep it like this
+        sleep( amount_seconds_sleep ); // TODO: Change to usleep or keep it like this
     }
 }

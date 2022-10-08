@@ -1,7 +1,4 @@
 #include "process.h"
-// TODO: check guess COPY INTO REAL or vice versa
-// OBS 5 is not good and everything after it (maybe because they're not generated)
-// TODO: make somewhat generator
 
 /**
  * @brief           Computes distance between two objects.
@@ -96,7 +93,7 @@ static void guess_coordinates
         order_1,
         order_0,
         altitude
-    );     
+    );
 }
 
 /**
@@ -143,6 +140,7 @@ static void get_data
             order_0,
             true
         );
+        input[index].guess.time = input[index].real[order_2].time + 1;
     }
 
     size_t current_order = input[index].observations++ % order;
@@ -198,51 +196,11 @@ static units get_approach_velocity
     struct data_input const * const second_previous
 )
 {
-    units delta_longitude_current       =
-    first_current->position.longitude       - second_current->position.longitude;
-    units delta_latitude_current        =
-    first_current->position.latitude        - second_current->position.latitude;
-    units delta_altitude_current        =
-    first_current->position.altitude        - second_current->position.altitude;
-    units radius_current                =
-    radius_earth( delta_altitude_current )  + first_current->position.altitude;
-    units sin_delta_latitude_current    =
-    sin( to_radians( delta_latitude_current ));
-
-    units delta_longitude_previous      =
-    first_previous->position.longitude      - second_previous->position.longitude;
-    units delta_latitude_previous       =
-    first_previous->position.latitude       - second_previous->position.latitude;
-    units delta_altitude_previous       =
-    first_previous->position.altitude       - second_previous->position.altitude;
-    units radius_previous               =
-    radius_earth( delta_altitude_previous ) + first_previous->position.altitude;
-    units sin_delta_latitude_previous   =
-    sin( to_radians( delta_latitude_previous ));
-
-    units delta_time                    =
-    second_current->time                    - second_current->time;
-
     return
     (
-        (
-            delta_altitude_current * delta_altitude_current
-        +   radius_current * radius_current *
-            delta_longitude_current * delta_longitude_current
-            * sin_delta_latitude_current * sin_delta_latitude_current
-        +   radius_current * radius_current *
-            delta_latitude_current * delta_latitude_current
-        )
-        - 
-        (
-            delta_altitude_previous * delta_altitude_previous
-        +   radius_previous * radius_previous *
-            delta_longitude_previous * delta_longitude_previous
-            * sin_delta_latitude_previous * sin_delta_latitude_previous
-        +   radius_previous * radius_previous *
-            delta_latitude_previous * delta_latitude_previous
-        )
-    ) / ( delta_time * delta_time ) * seconds_per_hour;
+        sqrt( get_distance( &first_previous->position, &second_previous->position ) )
+    -   sqrt( get_distance( &first_current->position, &second_current->position ) )
+    ) / ( second_current->time - second_previous->time ) * seconds_per_hour;
 }
 
 /**
@@ -314,6 +272,8 @@ static size_t find_by_id
     return amount_objects_maximum;
 }
 
+char fileNAM[] = "./input/0.json";
+
 void * process()
 {
     FILE *  data_input;
@@ -334,7 +294,7 @@ void * process()
 
         amount_to_delete = has_other_objects = 0;
 
-        data_input = fopen( g_files[file_index_input], "r" );
+        data_input = fopen( fileNAM, "r" );
         fscanf( data_input, "%*c %*s %*c" );
         get_data( g_data, data_input, 0 );
         g_data[0].id = 0;   // TODO: might be unnecessary, so delete this
@@ -383,7 +343,6 @@ void * process()
         );
         fclose( data_input );
 
-
         self_order_current                          =
         ( g_data[0].observations + order - 1 ) % order;
         self_order_previous                         =
@@ -430,15 +389,21 @@ void * process()
                 &g_data[0].real[self_order_current].position,
                 &g_data[i].real[object_order_current].position
             );
-            g_data[i].approach_velocity = g_data[i].observations > 1
-            ?   get_approach_velocity
+            if ( g_data[i].observations > 1 )
+            {
+                g_data[i].approach_velocity =
+                get_approach_velocity
                 (
                     &g_data[0].real[self_order_current],
                     &g_data[0].real[self_order_previous],
                     &g_data[i].real[object_order_current],
                     &g_data[i].real[object_order_previous]
-                )
-            :   0;
+                );
+            }
+            else
+            {
+                g_data[i].approach_velocity = 0;
+            }
 
             if ( g_data[i].observations < 4 )
             {
@@ -457,17 +422,19 @@ void * process()
                 get_approach_velocity
                 (
                     &g_data[0].guess,
-                    &g_data[i].guess,
                     &g_data[0].real[self_order_previous],
+                    &g_data[i].guess,
                     &g_data[i].real[object_order_previous]
                 );
             }
         }
 
+        fileNAM[8] = g_amount_observations + 1 + '0';
+
         g_write_happened = true;
         pthread_cond_signal( &g_condition );
         pthread_mutex_unlock( &g_mutex );
 
-        sleep( 4 * amount_seconds_sleep );
+        sleep( amount_seconds_sleep );
     }
 }
