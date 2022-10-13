@@ -12,7 +12,6 @@ static units get_distance
     struct coordinates const * const object_2
 )
 {
-    units phi_1             = to_radians( object_1->longitude );
     units theta_1           = to_radians( object_1->latitude );
     units theta_2           = to_radians( object_2->latitude );
     units delta_altitude    = object_1->altitude - object_2->altitude;
@@ -21,8 +20,8 @@ static units get_distance
     (
         sin( theta_1 ) * sin( theta_2 )
     +   cos( theta_1 ) * cos( theta_2 )
-        * cos( phi_1 - to_radians( object_2->longitude ))
-    ) * radius_earth( phi_1 );
+        * cos( to_radians( object_1->longitude ) - to_radians( object_2->longitude ))
+    ) * radius_earth( delta_altitude );
 
     return distance_2D * distance_2D + delta_altitude * delta_altitude;
 }
